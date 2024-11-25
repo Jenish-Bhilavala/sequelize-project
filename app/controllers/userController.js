@@ -1,5 +1,5 @@
 const db = require("../helpers/db");
-const responseStatus = require("../utils/enum");
+const response = require("../utils/message");
 const { StatusCodes } = require("http-status-codes");
 const HandleResponse = require("../services/errorHandler");
 
@@ -11,9 +11,9 @@ module.exports = {
       if (users.length === 0) {
         return res.json(
           HandleResponse(
+            response.RESPONSE_ERROR,
             StatusCodes.NOT_FOUND,
-            responseStatus.RESPONSE_ERROR,
-            "No user found.",
+            response.NO_USER_FOUND,
             undefined
           )
         );
@@ -21,9 +21,9 @@ module.exports = {
 
       return res.json(
         HandleResponse(
+          response.RESPONSE_SUCCESS,
           StatusCodes.OK,
-          responseStatus.RESPONSE_SUCCESS,
-          "User retrieved successfully",
+          response.USER_RETRIEVED,
           users
         )
       );
