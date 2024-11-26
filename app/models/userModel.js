@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const Gender = require('../utils/enum');
+=======
+const { gender } = require('../utils/enum');
+>>>>>>> 86ec33137cfb01458b74dfa831de0a524ae03100
 
 module.exports = (sequelize, Sequelize) => {
   const userModel = sequelize.define(
@@ -23,7 +27,7 @@ module.exports = (sequelize, Sequelize) => {
       },
       gender: {
         type: Sequelize.ENUM,
-        values: [Gender.MALE, Gender.FEMALE, Gender.OTHER],
+        values: [gender.MALE, gender.FEMALE, gender.OTHER],
         allowNull: false,
       },
       email: {

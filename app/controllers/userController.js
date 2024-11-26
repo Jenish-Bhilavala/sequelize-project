@@ -81,6 +81,7 @@ module.exports = {
       );
     }
   },
+
   viewProfile: async (req, res, next) => {
     const id = req.params.id;
 
@@ -120,6 +121,7 @@ module.exports = {
       );
     }
   },
+
   updateProfile: async (req, res, next) => {
     const id = req.params.id;
 
