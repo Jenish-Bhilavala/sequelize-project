@@ -159,7 +159,7 @@ module.exports = {
         req.body.image = path.join(req.file.filename);
       }
 
-      const updatedUser = await db.userModel.update(req.body, {
+      await db.userModel.update(req.body, {
         where: { id: findUser.id },
       });
 
