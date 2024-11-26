@@ -9,6 +9,7 @@ const {
   registerValidation,
   updateUserValidation,
 } = require('../validations/userValidation');
+const { log } = require('console');
 
 module.exports = {
   registerUser: async (req, res, next) => {
@@ -86,7 +87,9 @@ module.exports = {
     const id = req.params.id;
 
     try {
-      const findUser = await db.userModel.findByPk(id);
+      const findUser = await db.userModel.findByPk(id, {
+        attributes: { exclude: ['password'] },
+      });
 
       if (!findUser) {
         return res.json(
@@ -139,9 +142,9 @@ module.exports = {
         );
       }
 
-      const user = await db.userModel.findByPk(id);
+      const findUser = await db.userModel.findByPk(id);
 
-      if (!user) {
+      if (!findUser) {
         return res.json(
           HandleResponse(
             response.ERROR,
@@ -156,14 +159,16 @@ module.exports = {
         req.body.image = path.join(req.file.filename);
       }
 
-      const updatedUser = await user.update(req.body);
+      const updatedUser = await db.userModel.update(req.body, {
+        where: { id: findUser.id },
+      });
 
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
           message.PROFILE_UPDATED,
-          updatedUser
+          undefined
         )
       );
     } catch (error) {
