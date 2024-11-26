@@ -1,19 +1,20 @@
-const db = require("../helpers/db");
-const response = require("../utils/message");
-const { StatusCodes } = require("http-status-codes");
-const HandleResponse = require("../services/errorHandler");
+const db = require('../helpers/db');
+const { response } = require('../utils/enum');
+const message = require('../utils/message');
+const { StatusCodes } = require('http-status-codes');
+const HandleResponse = require('../services/errorHandler');
 
 module.exports = {
   getUser: async (req, res, next) => {
     try {
-      const users = await db.user.findAll();
+      const findUser = await db.userModel.findAll();
 
-      if (users.length === 0) {
+      if (findUser.length === 0) {
         return res.json(
           HandleResponse(
             response.RESPONSE_ERROR,
             StatusCodes.NOT_FOUND,
-            response.NO_USER_FOUND,
+            message.NO_USER_FOUND,
             undefined
           )
         );
@@ -23,12 +24,22 @@ module.exports = {
         HandleResponse(
           response.RESPONSE_SUCCESS,
           StatusCodes.OK,
-          response.USER_RETRIEVED,
-          users
+          message.USER_RETRIEVED,
+          findUser
         )
       );
     } catch (error) {
-      next(error);
+      next(
+        res.json(
+          HandleResponse(
+            response.RESPONSE_ERROR,
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            message.INTERNAL_SERVER_ERROR,
+            undefined,
+            error
+          )
+        )
+      );
     }
   },
 };
