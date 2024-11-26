@@ -1,5 +1,5 @@
-const { StatusCodes } = require("http-status-codes");
-const responseData = require("../utils/message");
+const { StatusCodes } = require('http-status-codes');
+const responseData = require('../utils/message');
 
 function HandleResponse(status, statusCode, message, data, error) {
   if (status === responseData.SUCCESS) {

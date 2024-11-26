@@ -1,8 +1,8 @@
-const Gender = require("../utils/enum");
+const Gender = require('../utils/enum');
 
 module.exports = (sequelize, Sequelize) => {
-  const User = sequelize.define(
-    "user",
+  const userModel = sequelize.define(
+    'user',
     {
       id: {
         type: Sequelize.INTEGER,
@@ -49,21 +49,13 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING(50),
         allowNull: true,
       },
-      created_at: {
-        type: "TIMESTAMP",
-        defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
-        allowNull: false,
-      },
-      updated_at: {
-        type: "TIMESTAMP",
-        defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
-        allowNull: false,
-      },
     },
     {
       freezeTableName: true,
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
-  return User;
+  return userModel;
 };
