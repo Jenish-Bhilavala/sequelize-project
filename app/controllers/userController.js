@@ -139,7 +139,6 @@ module.exports = {
         );
       }
 
-      const { firstName, lastName, hobby, gender, phone } = req.body;
       const user = await db.userModel.findByPk(id);
 
       if (!user) {
@@ -153,17 +152,11 @@ module.exports = {
         );
       }
 
-      const image = req.file ? path.join(req.file.filename) : user.image;
-      const updatedData = {
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        ...(hobby && { hobby }),
-        ...(gender && { gender }),
-        ...(phone && { phone }),
-        ...(req.file && { image }),
-      };
+      if (req.file) {
+        req.body.image = path.join(req.file.filename);
+      }
 
-      const updatedUser = await user.update(updatedData);
+      const updatedUser = await user.update(req.body);
 
       return res.json(
         HandleResponse(
