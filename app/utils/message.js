@@ -18,4 +18,5 @@ module.exports = {
   RETRIEVED_SUCCESSFULLY: `retrieved successfully.`,
   ALREADY_EXIST: `already exist.`,
   UPDATED: `updated successfully.`,
+  DELETED: `deleted successfully.`,
 };
