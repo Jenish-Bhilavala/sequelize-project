@@ -146,9 +146,9 @@ module.exports = {
         );
       }
 
-      const user = await db.userModel.findByPk(id);
+      const findUser = await db.userModel.findByPk(id);
 
-      if (!user) {
+      if (!findUser) {
         return res.json(
           HandleResponse(
             response.ERROR,
@@ -163,7 +163,9 @@ module.exports = {
         req.body.image = path.join(req.file.filename);
       }
 
-      const updatedUser = await user.update(req.body);
+      await db.userModel.update(req.body, {
+        where: { id: findUser.id },
+      });
 
       return res.json(
         HandleResponse(
