@@ -5,9 +5,17 @@ module.exports = {
   INTERNAL_SERVER_ERROR: `Internal server error.`,
 
   // User response
-  NO_USER_FOUND: `No user found.`,
-  USER_RETRIEVED: `User retrieved successfully.`,
-  USER_EXIST: `User already exists.`,
   USER_REGISTERED: `User registered successfully.`,
-  PROFILE_UPDATED: `Profile updated successfully.`,
+  INVALID_CREDENTIALS: `Invalid email or password.`,
+  USER_LOGGED_IN: `Logging successfully.`,
+  OTP_ERROR: `Failed to send otp.`,
+  OTP_INVALID: `Invalid otp or otp expired.`,
+  OTP_SENT: `OTP sent successfully`,
+  ERROR_IN_EMAIL_VERIFICATION: `Email verification error.`,
+
+  // common response
+  NOT_FOUND: `not found.`,
+  RETRIEVED_SUCCESSFULLY: `retrieved successfully.`,
+  ALREADY_EXIST: `already exist.`,
+  UPDATED: `updated successfully.`,
 };

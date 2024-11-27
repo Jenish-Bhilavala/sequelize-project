@@ -83,4 +83,54 @@ const updateUserValidation = Joi.object({
   }),
 });
 
-module.exports = { registerValidation, updateUserValidation };
+const loginValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.base': 'Email must be a string.',
+    'string.empty': 'Email cannot be empty.',
+    'any.required': 'Email is a required field.',
+    'string.email': 'Email must be a valid email address.',
+  }),
+  password: Joi.string()
+    .pattern(new RegExp('^[A-Z][a-zA-Z0-9!@#$%&*.]{7,}$'))
+    .required()
+    .messages({
+      'string.pattern.base':
+        'Password must start with a capital latter and must be at least 8 characters long.',
+      'string.empty': 'Password cannot be empty.',
+      'any.required': 'Password must be required.',
+    }),
+});
+
+const forgotPasswordValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.base': 'Email must be a string.',
+    'string.empty': 'Email cannot be empty.',
+    'any.required': 'Email is a required field.',
+    'string.email': 'Email must be a valid email address.',
+  }),
+  newPassword: Joi.string()
+    .pattern(new RegExp('^[A-Z][a-zA-Z0-9!@#$%&*\\.]{8,}$'))
+    .required()
+    .messages({
+      'string.pattern.base':
+        'Password must start with a capital letter and be at least 8 characters long.',
+      'string.empty': 'Password cannot be empty.',
+      'any.required': 'Password is a required field.',
+    }),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('newPassword'))
+    .required()
+    .messages({
+      'any.only': 'Password and confirm password must match.',
+      'string.empty': 'Confirm password cannot be empty.',
+      'any.required': 'Confirm password is a required field.',
+    }),
+  otp: Joi.string(),
+});
+
+module.exports = {
+  registerValidation,
+  updateUserValidation,
+  loginValidation,
+  forgotPasswordValidation,
+};
