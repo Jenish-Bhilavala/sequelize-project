@@ -3,151 +3,16 @@ const message = require('../utils/message');
 const HandleResponse = require('../services/errorHandler');
 const { response } = require('../utils/enum');
 const { StatusCodes } = require('http-status-codes');
-const { categoryValidation } = require('../validations/categoryValidation');
+const {
+  portfolioValidation,
+  updatePortfolioValidation,
+} = require('../validations/portfolioValidation');
 
 module.exports = {
-  addCategory: async (req, res) => {
+  addPortfolio: async (req, res) => {
     try {
-      const { category } = req.body;
-      const { error } = categoryValidation.validate(req.body);
-      if (error) {
-        return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            error.details[0].message
-          )
-        );
-      }
-
-      const addCategory = await db.categoryModel.create({
-        category,
-      });
-
-      return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.CREATED,
-          `Category ${message.ADDED}`,
-          addCategory
-        )
-      );
-    } catch (error) {
-      return res.json(
-        HandleResponse(
-          response.ERROR,
-          StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
-        )
-      );
-    }
-  },
-
-  listCategory: async (req, res) => {
-    try {
-      const {
-        page = 1,
-        limit = 10,
-        sortBy = 'id',
-        orderBy = 'ASC',
-        searchTerm = '',
-      } = req.body;
-      const pageNumber = parseInt(page, 10);
-      const limitNumber = parseInt(limit, 10);
-      const offset = (pageNumber - 1) * limitNumber;
-
-      const filterOperation = {
-        offset: offset,
-        limit: limitNumber,
-        order: [[sortBy, orderBy]],
-      };
-
-      if (searchTerm) {
-        filterOperation.where = {
-          [db.Sequelize.Op.or]: [
-            { category: { [db.Sequelize.Op.like]: `${searchTerm}` } },
-          ],
-        };
-      }
-
-      const listCategory = await db.categoryModel.findAll(filterOperation);
-      if (listCategory.length === 0) {
-        return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Category ${message.NOT_FOUND}`,
-            undefined
-          )
-        );
-      }
-      return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Category ${message.RETRIEVED_SUCCESSFULLY}`,
-          listCategory
-        )
-      );
-    } catch (error) {
-      return res.json(
-        HandleResponse(
-          response.ERROR,
-          StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
-        )
-      );
-    }
-  },
-
-  viewCategory: async (req, res) => {
-    try {
-      const { id } = req.params;
-      const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
-      });
-
-      if (!findCategory) {
-        return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Category with id ${id} ${message.NOT_FOUND}`,
-            undefined
-          )
-        );
-      }
-      return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Category ${message.RETRIEVED_SUCCESSFULLY}`,
-          findCategory
-        )
-      );
-    } catch (error) {
-      return res.json(
-        HandleResponse(
-          response.ERROR,
-          StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
-        )
-      );
-    }
-  },
-
-  updateCategory: async (req, res) => {
-    try {
-      const { error } = categoryValidation.validate(req.body);
-      const { id } = req.params;
-
+      const { project_name, description, category_id } = req.body;
+      const { error } = portfolioValidation.validate(req.body);
       if (error) {
         return res.json(
           HandleResponse(
@@ -159,27 +24,33 @@ module.exports = {
           )
         );
       }
-      const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
-      });
 
-      if (!findCategory) {
+      if (req.files.length === 0) {
         return res.json(
           HandleResponse(
             response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Category with id ${id} ${message.NOT_FOUND}`,
+            StatusCodes.BAD_REQUEST,
+            message.IMAGE_REQUIRED,
             undefined
           )
         );
       }
 
-      await db.categoryModel.update(req.body, { where: { id: id } });
+      const imageArray = req.files.map((item) => item.filename);
+      const image = imageArray.join(',').toString();
+      const addPortfolio = await db.portfolioModel.create({
+        project_name,
+        category_id,
+        description,
+        image,
+      });
+
       return res.json(
         HandleResponse(
           response.SUCCESS,
-          StatusCodes.OK,
-          `Category ${message.UPDATED}`,
+          StatusCodes.CREATED,
+          `Project ${message.ADDED}`,
+          addPortfolio,
           undefined
         )
       );
@@ -196,30 +67,167 @@ module.exports = {
     }
   },
 
-  deleteCategory: async (req, res) => {
+  listPortfolio: async (req, res) => {
     try {
-      const { id } = req.params;
-      const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+      const listPortfolio = await db.portfolioModel.findAll({
+        include: {
+          model: db.categoryModel,
+          attributes: ['category'],
+        },
       });
-
-      if (!findCategory) {
+      if (listPortfolio.length === 0) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Category with id ${id} ${message.NOT_FOUND}`,
+            `Portfolio ${message.NOT_FOUND}`,
             undefined
           )
         );
       }
 
-      await findCategory.destroy();
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Category with id ${id} ${message.DELETED}`,
+          `Portfolio ${message.RETRIEVED_SUCCESSFULLY}`,
+          listPortfolio,
+          undefined
+        )
+      );
+    } catch (error) {
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          message.INTERNAL_SERVER_ERROR,
+          undefined,
+          error.message || error
+        )
+      );
+    }
+  },
+
+  viewPortfolio: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const findPortfolio = await db.portfolioModel.findOne({
+        where: { id: id },
+        include: {
+          model: db.categoryModel,
+          attributes: ['category'],
+        },
+      });
+      if (!findPortfolio) {
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `Portfolio ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+      return res.json(
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.OK,
+          `Portfolio ${message.RETRIEVED_SUCCESSFULLY}`,
+          findPortfolio,
+          undefined
+        )
+      );
+    } catch (error) {
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          message.INTERNAL_SERVER_ERROR,
+          undefined,
+          error.message || error
+        )
+      );
+    }
+  },
+
+  updatePortfolio: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { error } = updatePortfolioValidation.validate(req.body);
+      if (error) {
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            message.VALIDATION_ERROR,
+            error.details[0].message
+          )
+        );
+      }
+      const findPortfolio = await db.portfolioModel.findOne({
+        where: { id: id },
+      });
+      if (!findPortfolio) {
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `Portfolio with id ${id} ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+
+      const up = await db.portfolioModel.update(req.body, {
+        where: { id: id },
+      });
+      console.log(up);
+
+      return res.json(
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.OK,
+          `Portfolio with id ${id} ${message.UPDATED}`,
+          undefined
+        )
+      );
+    } catch (error) {
+      console.log(error);
+
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          message.INTERNAL_SERVER_ERROR,
+          undefined,
+          error.message || error
+        )
+      );
+    }
+  },
+
+  deletePortfolio: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const findPortfolio = await db.portfolioModel.findOne({
+        where: { id: id },
+      });
+      if (!findPortfolio) {
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.NOT_FOUND,
+            `Portfolio with id ${id} ${message.NOT_FOUND}`,
+            undefined
+          )
+        );
+      }
+      await db.portfolioModel.destroy({ where: { id: id } });
+      return res.json(
+        HandleResponse(
+          response.SUCCESS,
+          StatusCodes.OK,
+          `Portfolio with id ${id} ${message.DELETED}`,
           undefined
         )
       );

@@ -9,7 +9,7 @@ const sequelize = new Sequelize(
     dialect: process.env.DIALECT,
     host: process.env.HOST,
     port: process.env.DB_PORT,
-    logging: true,
+    logging: false,
     timezone: '+05:30',
   }
 );
@@ -30,6 +30,9 @@ db.sequelize = sequelize;
 db.userModel = require('../models/userModel')(sequelize, Sequelize);
 db.otpModel = require('../models/otpModel')(sequelize, Sequelize);
 db.categoryModel = require('../models/categoryModel')(sequelize, Sequelize);
+db.portfolioModel = require('../models/portfolioModel')(sequelize, Sequelize);
+
+db.portfolioModel.associate(db);
 
 db.sequelize.sync({ force: false }).then(() => {
   console.log('Database synchronized successfully.');
