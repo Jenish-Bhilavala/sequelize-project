@@ -11,6 +11,7 @@ const {
   registerValidation,
   updateUserValidation,
   loginValidation,
+  verifyEmailValidation,
   forgotPasswordValidation,
 } = require('../validations/userValidation');
 require('dotenv').config();
@@ -129,16 +130,16 @@ module.exports = {
     }
   },
 
-  updateProfile: async (req, res, next) => {
-    const id = req.params.id;
-
+  updateProfile: async (req, res) => {
     try {
+      const id = req.params.id;
       const { error } = updateUserValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
             response.ERROR,
-            StatusCodes.INTERNAL_SERVER_ERROR,
+            StatusCodes.BAD_REQUEST,
             message.VALIDATION_ERROR,
             undefined,
             `${error.details[0].message}`
@@ -176,30 +177,28 @@ module.exports = {
         )
       );
     } catch (error) {
-      console.error(error);
-      next(
-        res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            message.INTERNAL_SERVER_ERROR,
-            undefined,
-            error.message || error
-          )
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          message.INTERNAL_SERVER_ERROR,
+          undefined,
+          error.message || error
         )
       );
     }
   },
 
-  userLogin: async (req, res, next) => {
-    const { email, password } = req.body;
+  userLogin: async (req, res) => {
     try {
+      const { email, password } = req.body;
       const { error } = loginValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
             response.ERROR,
-            StatusCodes.INTERNAL_SERVER_ERROR,
+            StatusCodes.BAD_REQUEST,
             message.VALIDATION_ERROR,
             undefined,
             `${error.details[0].message}`
@@ -208,6 +207,7 @@ module.exports = {
       }
 
       const findUser = await db.userModel.findOne({ where: { email } });
+
       if (!findUser) {
         return res.json(
           HandleResponse(
@@ -220,6 +220,7 @@ module.exports = {
       }
 
       const isPasswordMatch = await bcrypt.compare(password, findUser.password);
+
       if (!isPasswordMatch) {
         return res.json(
           HandleResponse(
@@ -234,7 +235,7 @@ module.exports = {
       const token = jwt.sign(
         { id: findUser.id, email: findUser.email },
         process.env.JWT_SECRET_KEY,
-        { expiresIn: '24h' }
+        { expiresIn: process.env.JWT_EXPIRE_IN }
       );
 
       return res.json(
@@ -246,24 +247,34 @@ module.exports = {
         )
       );
     } catch (error) {
-      next(
-        res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            message.INTERNAL_SERVER_ERROR,
-            undefined,
-            error.message || error
-          )
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          message.INTERNAL_SERVER_ERROR,
+          undefined,
+          error.message || error
         )
       );
     }
   },
 
-  verifyEmail: async (req, res, next) => {
+  verifyEmail: async (req, res) => {
     try {
       const email = req.body.email;
-      const findUser = await db.userModel.findOne({ where: { email: email } });
+      const { error } = verifyEmailValidation.validate(req.body);
+
+      if (error) {
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            message.VALIDATION_ERROR
+          )
+        );
+      }
+
+      const findUser = await db.userModel.findOne({ where: { email } });
       if (!findUser) {
         return res.json(
           HandleResponse(
@@ -288,7 +299,9 @@ module.exports = {
       await sendEmail(email, otp);
 
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.OK, message.OTP_SENT, otp)
+        HandleResponse(response.SUCCESS, StatusCodes.OK, message.OTP_SENT, {
+          otp,
+        })
       );
     } catch (error) {
       return res.json(
@@ -303,10 +316,9 @@ module.exports = {
     }
   },
 
-  forgotPassword: async (req, res, next) => {
+  forgotPassword: async (req, res) => {
     try {
       const { email, newPassword, otp } = req.body;
-
       const { error } = forgotPasswordValidation.validate(req.body);
 
       if (error) {
@@ -322,7 +334,19 @@ module.exports = {
       }
 
       const findOTP = await db.otpModel.findOne({ where: { email, otp } });
-      if (!findOTP || new Date() > new Date(findOTP.expireAt)) {
+
+      if (!findOTP) {
+        return res.json(
+          HandleResponse(
+            response.ERROR,
+            StatusCodes.BAD_REQUEST,
+            message.OTP_INVALID
+          )
+        );
+      }
+
+      if (new Date() > new Date(findOTP.expireAt)) {
+        await findOTP.destroy();
         return res.json(
           HandleResponse(
             response.ERROR,
@@ -334,6 +358,7 @@ module.exports = {
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       const findUser = await db.userModel.findOne({ where: { email } });
+
       if (!findUser) {
         return res.json(
           HandleResponse(
@@ -356,7 +381,7 @@ module.exports = {
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Password ${message.UPDATED}`,
+          `Your password ${message.UPDATED}`,
           undefined
         )
       );

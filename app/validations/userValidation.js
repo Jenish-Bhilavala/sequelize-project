@@ -101,6 +101,15 @@ const loginValidation = Joi.object({
     }),
 });
 
+const verifyEmailValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.base': 'Email must be a string.',
+    'string.empty': 'Email cannot be empty.',
+    'any.required': 'Email is a required field.',
+    'string.email': 'Email must be a valid email address.',
+  }),
+});
+
 const forgotPasswordValidation = Joi.object({
   email: Joi.string().email().required().messages({
     'string.base': 'Email must be a string.',
@@ -125,7 +134,10 @@ const forgotPasswordValidation = Joi.object({
       'string.empty': 'Confirm password cannot be empty.',
       'any.required': 'Confirm password is a required field.',
     }),
-  otp: Joi.string(),
+  otp: Joi.number().required().messages({
+    'number.empty': 'OTP cannot be empty',
+    'any.required': 'OTP is a required field.',
+  }),
 });
 
 module.exports = {
@@ -133,4 +145,5 @@ module.exports = {
   updateUserValidation,
   loginValidation,
   forgotPasswordValidation,
+  verifyEmailValidation,
 };
