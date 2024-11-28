@@ -128,6 +128,10 @@ module.exports = {
           )
         );
       }
+
+      const images = findPortfolio.image ? findPortfolio.image.split(',') : [];
+      findPortfolio.image = images;
+
       return res.json(
         HandleResponse(
           response.SUCCESS,
