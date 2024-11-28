@@ -226,7 +226,7 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.UNAUTHORIZED,
-            message.INVALID_CREDENTIALS,
+            message.INVALID_CREDENTIALS_PASS,
             undefined
           )
         );
@@ -351,7 +351,7 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.OTP_INVALID
+            message.OTP_EXPIRED
           )
         );
       }

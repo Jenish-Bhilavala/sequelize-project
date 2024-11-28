@@ -6,7 +6,7 @@ module.exports = {
 
   // User response
   USER_REGISTERED: `User registered successfully.`,
-  INVALID_CREDENTIALS: `Invalid email or password.`,
+  INVALID_CREDENTIALS_PASS: `Invalid password.`,
   USER_LOGGED_IN: `Login successfully.`,
   OTP_ERROR: `Failed to send otp.`,
   OTP_INVALID: `Invalid otp.`,
