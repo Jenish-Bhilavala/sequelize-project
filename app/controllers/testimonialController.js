@@ -52,9 +52,31 @@ module.exports = {
     }
   },
 
-  listTestimonial: async (req, res) => {
+  listOfTestimonial: async (req, res) => {
     try {
-      const findTestimonial = await db.testimonialModel.findAll();
+      const { page, limit, sortBy, orderBy, searchTerm } = req.body;
+      const pageNumber = parseInt(page, 10);
+      const limitNumber = parseInt(limit, 10);
+      const offset = (pageNumber - 1) * limitNumber;
+
+      const filterOperation = {};
+
+      if (searchTerm) {
+        filterOperation = {
+          [db.Sequelize.Op.or]: [
+            { clint_name: { [db.Sequelize.Op.like]: `${searchTerm}` } },
+          ],
+        };
+      }
+
+      const findTestimonial = await db.testimonialModel.findAll({
+        where: {
+          ...filterOperation,
+        },
+        offset: offset,
+        limit: limitNumber,
+        order: [[sortBy, orderBy]],
+      });
 
       if (findTestimonial.length === 0) {
         return res.json(

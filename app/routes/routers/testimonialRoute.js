@@ -4,7 +4,7 @@ const upload = require('../../utils/multer');
 const testimonialModel = require('../../controllers/testimonialController');
 
 router.post('/', upload.single('image'), testimonialModel.addTestimonial);
-router.get('/', testimonialModel.listTestimonial);
+router.post('/list-testimonial', testimonialModel.listOfTestimonial);
 router.get('/view-testimonial/:id', testimonialModel.viewTestimonial);
 router.put(
   '/update/:id',
