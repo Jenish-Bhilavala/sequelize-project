@@ -113,7 +113,7 @@ module.exports = {
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio ${message.RETRIEVED_SUCCESSFULLY}`,
+          undefined,
           listPortfolio,
           undefined
         )
@@ -160,7 +160,7 @@ module.exports = {
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio ${message.RETRIEVED_SUCCESSFULLY}`,
+          undefined,
           findPortfolio,
           undefined
         )
@@ -236,7 +236,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const findPortfolio = await db.portfolioModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findPortfolio) {
