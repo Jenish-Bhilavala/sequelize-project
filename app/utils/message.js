@@ -20,4 +20,6 @@ module.exports = {
   ALREADY_EXIST: `already exist.`,
   UPDATED: `updated successfully.`,
   DELETED: `deleted successfully.`,
+  ADDED: `added successfully.`,
+  IMAGE_REQUIRED: `Image is a required field.`,
 };
