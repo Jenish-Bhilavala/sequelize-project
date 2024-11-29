@@ -13,6 +13,7 @@ module.exports = {
     try {
       const { project_name, description, category_id } = req.body;
       const { error } = portfolioValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
@@ -67,14 +68,36 @@ module.exports = {
     }
   },
 
-  listPortfolio: async (req, res) => {
+  listOfPortfolio: async (req, res) => {
     try {
+      const { page, limit, sortBy, orderBy, searchTerm } = req.body;
+      const pageNumber = parseInt(page, 10);
+      const limitNumber = parseInt(limit, 10);
+      const offset = (pageNumber - 1) * limitNumber;
+
+      const filterOperation = {};
+
+      if (searchTerm) {
+        filterOperation = {
+          [db.Sequelize.Op.or]: [
+            { project_name: { [db.Sequelize.Op.like]: `${searchTerm}` } },
+          ],
+        };
+      }
+
       const listPortfolio = await db.portfolioModel.findAll({
+        where: {
+          ...filterOperation,
+        },
+        offset: offset,
+        limit: limitNumber,
+        order: [[sortBy, orderBy]],
         include: {
           model: db.categoryModel,
-          attributes: ['category'],
+          attributes: ['category_name'],
         },
       });
+
       if (listPortfolio.length === 0) {
         return res.json(
           HandleResponse(
@@ -115,9 +138,10 @@ module.exports = {
         where: { id: id },
         include: {
           model: db.categoryModel,
-          attributes: ['category'],
+          attributes: ['category_name'],
         },
       });
+
       if (!findPortfolio) {
         return res.json(
           HandleResponse(
@@ -158,6 +182,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const { error } = updatePortfolioValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
@@ -168,36 +193,33 @@ module.exports = {
           )
         );
       }
+
       const findPortfolio = await db.portfolioModel.findOne({
-        where: { id: id },
+        where: { id },
       });
+
       if (!findPortfolio) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Portfolio with id ${id} ${message.NOT_FOUND}`,
+            `Portfolio ${message.NOT_FOUND}`,
             undefined
           )
         );
       }
 
-      const up = await db.portfolioModel.update(req.body, {
-        where: { id: id },
-      });
-      console.log(up);
+      await db.portfolioModel.update(req.body, { where: { id } });
 
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio with id ${id} ${message.UPDATED}`,
+          `Portfolio ${message.UPDATED}`,
           undefined
         )
       );
     } catch (error) {
-      console.log(error);
-
       return res.json(
         HandleResponse(
           response.ERROR,
@@ -216,22 +238,25 @@ module.exports = {
       const findPortfolio = await db.portfolioModel.findOne({
         where: { id: id },
       });
+
       if (!findPortfolio) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Portfolio with id ${id} ${message.NOT_FOUND}`,
+            `Portfolio ${message.NOT_FOUND}`,
             undefined
           )
         );
       }
-      await db.portfolioModel.destroy({ where: { id: id } });
+
+      await db.portfolioModel.destroy({ where: { id } });
+
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio with id ${id} ${message.DELETED}`,
+          `Portfolio ${message.DELETED}`,
           undefined
         )
       );
