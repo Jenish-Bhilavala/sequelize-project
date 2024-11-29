@@ -183,6 +183,7 @@ module.exports = {
   updatePortfolio: async (req, res) => {
     try {
       const { id } = req.params;
+      const { project_name, category_id, description } = req.body;
       const { error } = updatePortfolioValidation.validate(req.body);
 
       if (error) {
@@ -211,7 +212,11 @@ module.exports = {
         );
       }
 
-      await db.portfolioModel.update(req.body, { where: { id } });
+      const imageArray = req.files.map((item) => item.filename);
+      const image = imageArray.join(',').toString();
+      const portfolio = { project_name, category_id, description, image };
+
+      await db.portfolioModel.update(portfolio, { where: { id } });
 
       return res.json(
         HandleResponse(
