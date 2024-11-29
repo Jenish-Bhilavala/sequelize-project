@@ -1,18 +1,22 @@
+const path = require('path');
 const db = require('../helpers/db');
 const message = require('../utils/message');
 const HandleResponse = require('../services/errorHandler');
 const { response } = require('../utils/enum');
 const { StatusCodes } = require('http-status-codes');
 const {
-  portfolioValidation,
-  updatePortfolioValidation,
-} = require('../validations/portfolioValidation');
+  testimonialValidation,
+  updateTestimonialValidation,
+} = require('../validations/testimonialValidation');
 
 module.exports = {
-  addPortfolio: async (req, res) => {
+  addTestimonial: async (req, res) => {
     try {
-      const { project_name, description, category_id } = req.body;
-      const { error } = portfolioValidation.validate(req.body);
+      const { clint_name, review } = req.body;
+      const image = req.file ? path.join(req.file.filename) : null;
+      const testimonial = { clint_name, review, image };
+      const { error } = testimonialValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
@@ -25,33 +29,14 @@ module.exports = {
         );
       }
 
-      if (req.files.length === 0) {
-        return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.BAD_REQUEST,
-            message.IMAGE_REQUIRED,
-            undefined
-          )
-        );
-      }
-
-      const imageArray = req.files.map((item) => item.filename);
-      const image = imageArray.join(',').toString();
-      const addPortfolio = await db.portfolioModel.create({
-        project_name,
-        category_id,
-        description,
-        image,
-      });
+      const addTestimonial = await db.testimonialModel.create(testimonial);
 
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.CREATED,
-          `Project ${message.ADDED}`,
-          addPortfolio,
-          undefined
+          `Review ${message.ADDED}`,
+          addTestimonial
         )
       );
     } catch (error) {
@@ -67,20 +52,16 @@ module.exports = {
     }
   },
 
-  listPortfolio: async (req, res) => {
+  listTestimonial: async (req, res) => {
     try {
-      const listPortfolio = await db.portfolioModel.findAll({
-        include: {
-          model: db.categoryModel,
-          attributes: ['category'],
-        },
-      });
-      if (listPortfolio.length === 0) {
+      const findTestimonial = await db.testimonialModel.findAll();
+
+      if (findTestimonial.length === 0) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Portfolio ${message.NOT_FOUND}`,
+            `Testimonials ${message.NOT_FOUND}`,
             undefined
           )
         );
@@ -90,9 +71,8 @@ module.exports = {
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio ${message.RETRIEVED_SUCCESSFULLY}`,
-          listPortfolio,
-          undefined
+          undefined,
+          findTestimonial
         )
       );
     } catch (error) {
@@ -108,37 +88,29 @@ module.exports = {
     }
   },
 
-  viewPortfolio: async (req, res) => {
+  viewTestimonial: async (req, res) => {
     try {
       const { id } = req.params;
-      const findPortfolio = await db.portfolioModel.findOne({
-        where: { id: id },
-        include: {
-          model: db.categoryModel,
-          attributes: ['category'],
-        },
+      const findTestimonial = await db.testimonialModel.findOne({
+        where: { id },
       });
-      if (!findPortfolio) {
+
+      if (!findTestimonial) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Portfolio ${message.NOT_FOUND}`,
-            undefined
+            `Testimonial ${message.NOT_FOUND}`
           )
         );
       }
-
-      const images = findPortfolio.image ? findPortfolio.image.split(',') : [];
-      findPortfolio.image = images;
 
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio ${message.RETRIEVED_SUCCESSFULLY}`,
-          findPortfolio,
-          undefined
+          undefined,
+          findTestimonial
         )
       );
     } catch (error) {
@@ -147,17 +119,18 @@ module.exports = {
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
           message.INTERNAL_SERVER_ERROR,
-          undefined,
           error.message || error
         )
       );
     }
   },
 
-  updatePortfolio: async (req, res) => {
+  updateTestimonial: async (req, res) => {
     try {
       const { id } = req.params;
-      const { error } = updatePortfolioValidation.validate(req.body);
+      const { clint_name, review } = req.body;
+      const { error } = updateTestimonialValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
@@ -168,36 +141,38 @@ module.exports = {
           )
         );
       }
-      const findPortfolio = await db.portfolioModel.findOne({
-        where: { id: id },
+
+      const findTestimonial = await db.testimonialModel.findOne({
+        where: { id },
       });
-      if (!findPortfolio) {
+
+      if (!findTestimonial) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Portfolio with id ${id} ${message.NOT_FOUND}`,
-            undefined
+            `Testimonial ${message.NOT_FOUND}`
           )
         );
       }
 
-      const up = await db.portfolioModel.update(req.body, {
-        where: { id: id },
+      const image = req.file
+        ? path.join(req.file.filename)
+        : findTestimonial.image;
+      const testimonial = { clint_name, review, image };
+
+      await db.testimonialModel.update(testimonial, {
+        where: { id },
       });
-      console.log(up);
 
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio with id ${id} ${message.UPDATED}`,
-          undefined
+          `Testimonial ${message.UPDATED}`
         )
       );
     } catch (error) {
-      console.log(error);
-
       return res.json(
         HandleResponse(
           response.ERROR,
@@ -210,30 +185,31 @@ module.exports = {
     }
   },
 
-  deletePortfolio: async (req, res) => {
+  deleteTestimonial: async (req, res) => {
     try {
       const { id } = req.params;
-      const findPortfolio = await db.portfolioModel.findOne({
+      const findTestimonial = await db.testimonialModel.findOne({
         where: { id },
       });
 
-      if (!findPortfolio) {
+      if (!findTestimonial) {
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Portfolio with id ${id} ${message.NOT_FOUND}`,
+            `Testimonial ${message.NOT_FOUND}`,
             undefined
           )
         );
       }
-      await db.portfolioModel.destroy({ where: { id: id } });
+
+      await db.testimonialModel.destroy({ where: { id } });
+
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Portfolio with id ${id} ${message.DELETED}`,
-          undefined
+          `Testimonial ${message.DELETED}`
         )
       );
     } catch (error) {
