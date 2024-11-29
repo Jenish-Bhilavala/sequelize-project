@@ -1,18 +1,18 @@
-module.exports = (sequelize, Sequeilze) => {
+module.exports = (sequelize, Sequelize) => {
   const portfolioModel = sequelize.define(
     'portfolio',
     {
       id: {
-        type: Sequeilze.INTEGER,
+        type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
       project_name: {
-        type: Sequeilze.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
       category_id: {
-        type: Sequeilze.INTEGER,
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: {
           model: 'category',
@@ -20,11 +20,11 @@ module.exports = (sequelize, Sequeilze) => {
         },
       },
       description: {
-        type: Sequeilze.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
       image: {
-        type: Sequeilze.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
     },

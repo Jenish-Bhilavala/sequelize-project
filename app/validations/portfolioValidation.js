@@ -6,7 +6,11 @@ const portfolioValidation = Joi.object({
     'string.empty': `Project name cannot be empty.`,
     'any.required': `Project name is a required field.`,
   }),
-  category_id: Joi.string().required(),
+  category_id: Joi.number().required().messages({
+    'number.base': `Category id must be a number.`,
+    'number.empty': `Category id cannot be null.`,
+    'any.required': `Category id is a required field.`,
+  }),
   description: Joi.string().required().messages({
     'string.base': `Description must be a string.`,
     'string.empty': `Description cannot be empty.`,
@@ -20,7 +24,11 @@ const updatePortfolioValidation = Joi.object({
     'string.base': `Project name must be a string.`,
     'string.empty': `Project name cannot be empty.`,
   }),
-  category_id: Joi.string().optional(),
+  category_id: Joi.number().required().messages({
+    'number.base': `Category id must be a number.`,
+    'number.empty': `Category id cannot be null.`,
+    'any.required': `Category id is a required field.`,
+  }),
   description: Joi.string().optional().messages({
     'string.base': `Description must be a string.`,
     'string.empty': `Description cannot be empty.`,

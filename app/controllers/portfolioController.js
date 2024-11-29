@@ -92,10 +92,12 @@ module.exports = {
         offset: offset,
         limit: limitNumber,
         order: [[sortBy, orderBy]],
-        include: {
-          model: db.categoryModel,
-          attributes: ['category_name'],
-        },
+        include: [
+          {
+            model: db.categoryModel,
+            attributes: ['category_name'],
+          },
+        ],
       });
 
       if (listPortfolio.length === 0) {
