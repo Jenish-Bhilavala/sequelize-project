@@ -4,12 +4,13 @@ const HandleResponse = require('../services/errorHandler');
 const { response } = require('../utils/enum');
 const { StatusCodes } = require('http-status-codes');
 const { categoryValidation } = require('../validations/categoryValidation');
+const { when } = require('joi');
 
 module.exports = {
   addCategory: async (req, res) => {
     try {
-      const { category } = req.body;
       const { error } = categoryValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
@@ -21,9 +22,7 @@ module.exports = {
         );
       }
 
-      const addCategory = await db.categoryModel.create({
-        category,
-      });
+      const addCategory = await db.categoryModel.create(req.body);
 
       return res.json(
         HandleResponse(
@@ -46,34 +45,30 @@ module.exports = {
     }
   },
 
-  listCategory: async (req, res) => {
+  listOfCategory: async (req, res) => {
     try {
-      const {
-        page = 1,
-        limit = 10,
-        sortBy = 'id',
-        orderBy = 'ASC',
-        searchTerm = '',
-      } = req.body;
+      const { page, limit, sortBy, orderBy, searchTerm } = req.body;
       const pageNumber = parseInt(page, 10);
       const limitNumber = parseInt(limit, 10);
       const offset = (pageNumber - 1) * limitNumber;
 
-      const filterOperation = {
-        offset: offset,
-        limit: limitNumber,
-        order: [[sortBy, orderBy]],
-      };
+      const filterOperation = {};
 
       if (searchTerm) {
-        filterOperation.where = {
+        filterOperation = {
           [db.Sequelize.Op.or]: [
             { category: { [db.Sequelize.Op.like]: `${searchTerm}` } },
           ],
         };
       }
 
-      const listCategory = await db.categoryModel.findAll(filterOperation);
+      const listCategory = await db.categoryModel.findAll({
+        where: { ...filterOperation },
+        offset: offset,
+        limit: limitNumber,
+        order: [[sortBy, orderBy]],
+      });
+
       if (listCategory.length === 0) {
         return res.json(
           HandleResponse(
@@ -88,7 +83,7 @@ module.exports = {
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Category ${message.RETRIEVED_SUCCESSFULLY}`,
+          undefined,
           listCategory
         )
       );
@@ -109,7 +104,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findCategory) {
@@ -117,16 +112,17 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Category with id ${id} ${message.NOT_FOUND}`,
+            `Category ${message.NOT_FOUND}`,
             undefined
           )
         );
       }
+
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Category ${message.RETRIEVED_SUCCESSFULLY}`,
+          undefined,
           findCategory
         )
       );
@@ -159,8 +155,9 @@ module.exports = {
           )
         );
       }
+
       const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findCategory) {
@@ -168,7 +165,7 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Category with id ${id} ${message.NOT_FOUND}`,
+            `Category ${message.NOT_FOUND}`,
             undefined
           )
         );
@@ -200,7 +197,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findCategory) {
@@ -208,18 +205,19 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.NOT_FOUND,
-            `Category with id ${id} ${message.NOT_FOUND}`,
+            `Category ${message.NOT_FOUND}`,
             undefined
           )
         );
       }
 
       await findCategory.destroy();
+
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.OK,
-          `Category with id ${id} ${message.DELETED}`,
+          `Category ${message.DELETED}`,
           undefined
         )
       );
