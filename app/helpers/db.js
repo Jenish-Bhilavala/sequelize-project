@@ -31,6 +31,10 @@ db.userModel = require('../models/userModel')(sequelize, Sequelize);
 db.otpModel = require('../models/otpModel')(sequelize, Sequelize);
 db.categoryModel = require('../models/categoryModel')(sequelize, Sequelize);
 db.portfolioModel = require('../models/portfolioModel')(sequelize, Sequelize);
+db.testimonialModel = require('../models/testimonialModel')(
+  sequelize,
+  Sequelize
+);
 
 db.portfolioModel.associate(db);
 
