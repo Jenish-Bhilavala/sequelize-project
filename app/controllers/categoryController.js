@@ -111,7 +111,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findCategory) {
@@ -163,7 +163,7 @@ module.exports = {
       }
 
       const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findCategory) {
@@ -203,7 +203,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const findCategory = await db.categoryModel.findOne({
-        where: { id: id },
+        where: { id },
       });
 
       if (!findCategory) {
