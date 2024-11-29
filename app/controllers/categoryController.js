@@ -10,6 +10,7 @@ module.exports = {
     try {
       const { category } = req.body;
       const { error } = categoryValidation.validate(req.body);
+
       if (error) {
         return res.json(
           HandleResponse(
@@ -74,6 +75,7 @@ module.exports = {
       }
 
       const listCategory = await db.categoryModel.findAll(filterOperation);
+
       if (listCategory.length === 0) {
         return res.json(
           HandleResponse(
@@ -159,6 +161,7 @@ module.exports = {
           )
         );
       }
+
       const findCategory = await db.categoryModel.findOne({
         where: { id: id },
       });
