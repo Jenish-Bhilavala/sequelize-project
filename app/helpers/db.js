@@ -10,6 +10,7 @@ const sequelize = new Sequelize(
     host: process.env.HOST,
     port: process.env.DB_PORT,
     logging: false,
+    timezone: '+05:30',
   }
 );
 
@@ -27,6 +28,7 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.userModel = require('../models/userModel')(sequelize, Sequelize);
+db.otpModel = require('../models/otpModel')(sequelize, Sequelize);
 
 db.sequelize.sync({ force: false }).then(() => {
   console.log('Database synchronized successfully.');
