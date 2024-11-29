@@ -173,7 +173,7 @@ module.exports = {
           response.SUCCESS,
           StatusCodes.OK,
           `Profile ${message.UPDATED}`,
-          updatedUser
+          undefined
         )
       );
     } catch (error) {
