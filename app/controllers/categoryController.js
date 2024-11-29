@@ -4,7 +4,6 @@ const HandleResponse = require('../services/errorHandler');
 const { response } = require('../utils/enum');
 const { StatusCodes } = require('http-status-codes');
 const { categoryValidation } = require('../validations/categoryValidation');
-const { when } = require('joi');
 
 module.exports = {
   addCategory: async (req, res) => {
