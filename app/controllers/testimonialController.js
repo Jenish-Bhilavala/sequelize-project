@@ -8,6 +8,7 @@ const {
   testimonialValidation,
   updateTestimonialValidation,
 } = require('../validations/testimonialValidation');
+const { logger } = require('../logger/logger');
 
 module.exports = {
   addTestimonial: async (req, res) => {
@@ -18,35 +19,33 @@ module.exports = {
       const { error } = testimonialValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            error.details[0].message
+            error.details[0].message,
+            undefined
           )
         );
       }
 
       const addTestimonial = await db.testimonialModel.create(testimonial);
 
+      logger.info(`Review ${message.ADDED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.CREATED,
-          `Review ${message.ADDED}`,
-          addTestimonial
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.CREATED, undefined, {
+          id: addTestimonial.id,
+        })
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -79,16 +78,13 @@ module.exports = {
       });
 
       if (findTestimonial.length === 0) {
+        logger.error(`Testimonial ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Testimonials ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
+      logger.info(`Testimonial ${message.RETRIEVED_SUCCESSFULLY}`);
       return res.json(
         HandleResponse(
           response.SUCCESS,
@@ -98,13 +94,13 @@ module.exports = {
         )
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -118,15 +114,13 @@ module.exports = {
       });
 
       if (!findTestimonial) {
+        logger.error(`Testimonial ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Testimonial ${message.NOT_FOUND}`
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
+      logger.info(`Testimonial ${message.RETRIEVED_SUCCESSFULLY}`);
       return res.json(
         HandleResponse(
           response.SUCCESS,
@@ -136,12 +130,13 @@ module.exports = {
         )
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -154,12 +149,13 @@ module.exports = {
       const { error } = updateTestimonialValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            error.details[0].message
+            error.details[0].message,
+            undefined
           )
         );
       }
@@ -168,13 +164,10 @@ module.exports = {
         where: { id },
       });
 
+      logger.error(`Testimonial ${message.NOT_FOUND}`);
       if (!findTestimonial) {
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Testimonial ${message.NOT_FOUND}`
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
@@ -187,21 +180,18 @@ module.exports = {
         where: { id },
       });
 
+      logger.info(`Testimonial ${message.UPDATED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Testimonial ${message.UPDATED}`
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -215,33 +205,26 @@ module.exports = {
       });
 
       if (!findTestimonial) {
+        logger.error(`Testimonial ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Testimonial ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
       await db.testimonialModel.destroy({ where: { id } });
 
+      logger.info(`Testimonial ${message.DELETED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Testimonial ${message.DELETED}`
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined)
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const db = require('../helpers/db');
 const message = require('../utils/message');
+const { logger } = require('../logger/logger');
 const HandleResponse = require('../services/errorHandler');
 const { response } = require('../utils/enum');
 const { StatusCodes } = require('http-status-codes');
@@ -17,20 +18,20 @@ const {
 require('dotenv').config();
 
 module.exports = {
-  registerUser: async (req, res, next) => {
+  registerUser: async (req, res) => {
     try {
       const { firstName, lastName, hobby, gender, email, password, phone } =
         req.body;
 
       const { error } = registerValidation.validate(req.body);
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            `${error.details[0].message}`
+            message.details[0].message,
+            undefined
           )
         );
       }
@@ -38,13 +39,13 @@ module.exports = {
       const existingUser = await db.userModel.findOne({ where: { email } });
 
       if (existingUser) {
+        logger.error(`User ${message.ALREADY_EXIST}`);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
             message.BAD_REQUEST,
-            undefined,
-            `User ${message.ALREADY_EXIST}`
+            undefined
           )
         );
       }
@@ -64,31 +65,30 @@ module.exports = {
         image,
       });
 
+      logger.info(`${message.USER_REGISTERED}`);
       res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.CREATED,
-          message.USER_REGISTERED,
-          newUser,
+          undefined,
+          { id: newUser.id },
           undefined
         )
       );
     } catch (error) {
-      next(
-        res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            message.INTERNAL_SERVER_ERROR,
-            undefined,
-            error.message || error
-          )
+      logger.error(error.message || error);
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          error.message || error,
+          undefined
         )
       );
     }
   },
 
-  viewProfile: async (req, res, next) => {
+  viewProfile: async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -97,34 +97,24 @@ module.exports = {
       });
 
       if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `User ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
+      logger.info(`User ${message.RETRIEVED_SUCCESSFULLY}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `User ${message.RETRIEVED_SUCCESSFULLY}`,
-          findUser
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, findUser)
       );
     } catch (error) {
-      next(
-        res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            message.INTERNAL_SERVER_ERROR,
-            undefined,
-            error.message || error
-          )
+      logger.error(error.message || error);
+      return res.json(
+        HandleResponse(
+          response.ERROR,
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          error.message || error,
+          undefined
         )
       );
     }
@@ -136,13 +126,13 @@ module.exports = {
       const { error } = updateUserValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            `${error.details[0].message}`
+            error.details[0].message,
+            undefined
           )
         );
       }
@@ -150,13 +140,9 @@ module.exports = {
       const findUser = await db.userModel.findByPk(id);
 
       if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `User ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
@@ -168,22 +154,18 @@ module.exports = {
         where: { id: findUser.id },
       });
 
+      logger.info(`Profile ${message.UPDATED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Profile ${message.UPDATED}`,
-          updatedUser
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
       );
     } catch (error) {
+      logger.error(error.message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -195,13 +177,13 @@ module.exports = {
       const { error } = loginValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            `${error.details[0].message}`
+            error.details[0].message,
+            undefined
           )
         );
       }
@@ -209,26 +191,18 @@ module.exports = {
       const findUser = await db.userModel.findOne({ where: { email } });
 
       if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `User ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
       const isPasswordMatch = await bcrypt.compare(password, findUser.password);
 
       if (!isPasswordMatch) {
+        logger.error(message.INVALID_CREDENTIALS_PASS);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.UNAUTHORIZED,
-            message.INVALID_CREDENTIALS_PASS,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.UNAUTHORIZED, undefined)
         );
       }
 
@@ -238,22 +212,18 @@ module.exports = {
         { expiresIn: process.env.JWT_EXPIRE_IN }
       );
 
+      logger.info(message.USER_LOGGED_IN);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          message.USER_LOGGED_IN,
-          { token }
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, { token })
       );
     } catch (error) {
+      logger.error(error.message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -265,24 +235,22 @@ module.exports = {
       const { error } = verifyEmailValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR
+            error.details[0].message,
+            undefined
           )
         );
       }
 
       const findUser = await db.userModel.findOne({ where: { email } });
       if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `User ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
@@ -298,19 +266,21 @@ module.exports = {
 
       await sendEmail(email, otp);
 
+      logger.info(message.OTP_SENT);
       return res.json(
-        HandleResponse(response.SUCCESS, StatusCodes.OK, message.OTP_SENT, {
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined, {
           otp,
         })
       );
     } catch (error) {
+      logger.error(error.message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
           message.ERROR_IN_EMAIL_VERIFICATION,
           undefined,
-          error.message
+          error.message || error
         )
       );
     }
@@ -322,13 +292,13 @@ module.exports = {
       const { error } = forgotPasswordValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            error.details[0].message
+            error.details[0].message,
+            undefined
           )
         );
       }
@@ -336,23 +306,17 @@ module.exports = {
       const findOTP = await db.otpModel.findOne({ where: { email, otp } });
 
       if (!findOTP) {
+        logger.error(message.OTP_INVALID);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.BAD_REQUEST,
-            message.OTP_INVALID
-          )
+          HandleResponse(response.ERROR, StatusCodes.BAD_REQUEST, undefined)
         );
       }
 
       if (new Date() > new Date(findOTP.expireAt)) {
         await findOTP.destroy();
+        logger.error(message.OTP_EXPIRED);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.BAD_REQUEST,
-            message.OTP_EXPIRED
-          )
+          HandleResponse(response.ERROR, StatusCodes.BAD_REQUEST, undefined)
         );
       }
 
@@ -360,13 +324,9 @@ module.exports = {
       const findUser = await db.userModel.findOne({ where: { email } });
 
       if (!findUser) {
+        logger.error(`User ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `User ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
@@ -377,21 +337,17 @@ module.exports = {
       );
       await findOTP.destroy();
 
+      logger.info(`Your password ${message.UPDATED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Your password ${message.UPDATED}`,
-          undefined
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
       );
     } catch (error) {
-      console.error(error);
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
+          error.message || error,
           undefined
         )
       );

@@ -7,6 +7,7 @@ const {
   portfolioValidation,
   updatePortfolioValidation,
 } = require('../validations/portfolioValidation');
+const { logger } = require('../logger/logger');
 
 module.exports = {
   addPortfolio: async (req, res) => {
@@ -15,25 +16,21 @@ module.exports = {
       const { error } = portfolioValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            error.details[0].message
+            error.details[0].message,
+            undefined
           )
         );
       }
 
       if (req.files.length === 0) {
+        logger.error(message.IMAGE_REQUIRED);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.BAD_REQUEST,
-            message.IMAGE_REQUIRED,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.BAD_REQUEST, undefined)
         );
       }
 
@@ -46,23 +43,24 @@ module.exports = {
         image,
       });
 
+      logger.info(`Project ${message.ADDED}`);
       return res.json(
         HandleResponse(
           response.SUCCESS,
           StatusCodes.CREATED,
-          `Project ${message.ADDED}`,
-          addPortfolio,
+          undefined,
+          { id: addPortfolio.id },
           undefined
         )
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -101,16 +99,13 @@ module.exports = {
       });
 
       if (listPortfolio.length === 0) {
+        logger.error(`Portfolio ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Portfolio ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
+      logger.info(`Portfolio ${message.RETRIEVED_SUCCESSFULLY}`);
       return res.json(
         HandleResponse(
           response.SUCCESS,
@@ -121,13 +116,13 @@ module.exports = {
         )
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -145,19 +140,16 @@ module.exports = {
       });
 
       if (!findPortfolio) {
+        logger.error(`Portfolio ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Portfolio ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
       const images = findPortfolio.image ? findPortfolio.image.split(',') : [];
       findPortfolio.image = images;
 
+      logger.info(`Portfolio ${message.RETRIEVED_SUCCESSFULLY}`);
       return res.json(
         HandleResponse(
           response.SUCCESS,
@@ -168,13 +160,13 @@ module.exports = {
         )
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -187,12 +179,13 @@ module.exports = {
       const { error } = updatePortfolioValidation.validate(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res.json(
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            error.details[0].message
+            error.details[0].message,
+            undefined
           )
         );
       }
@@ -202,13 +195,9 @@ module.exports = {
       });
 
       if (!findPortfolio) {
+        logger.error(`Portfolio ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Portfolio ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
@@ -218,22 +207,18 @@ module.exports = {
 
       await db.portfolioModel.update(portfolio, { where: { id } });
 
+      logger.info(`Portfolio ${message.UPDATED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Portfolio ${message.UPDATED}`,
-          undefined
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.ACCEPTED, undefined)
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -247,34 +232,26 @@ module.exports = {
       });
 
       if (!findPortfolio) {
+        logger.error(`Portfolio ${message.NOT_FOUND}`);
         return res.json(
-          HandleResponse(
-            response.ERROR,
-            StatusCodes.NOT_FOUND,
-            `Portfolio ${message.NOT_FOUND}`,
-            undefined
-          )
+          HandleResponse(response.ERROR, StatusCodes.NOT_FOUND, undefined)
         );
       }
 
       await db.portfolioModel.destroy({ where: { id } });
 
+      logger.info(`Portfolio ${message.DELETED}`);
       return res.json(
-        HandleResponse(
-          response.SUCCESS,
-          StatusCodes.OK,
-          `Portfolio ${message.DELETED}`,
-          undefined
-        )
+        HandleResponse(response.SUCCESS, StatusCodes.OK, undefined)
       );
     } catch (error) {
+      logger.error(error, message || error);
       return res.json(
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
