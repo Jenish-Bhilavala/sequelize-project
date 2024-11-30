@@ -17,7 +17,7 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
+            error.details[0].message,
             undefined
           )
         );
@@ -37,7 +37,7 @@ module.exports = {
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
+          error.message || error,
           undefined
         )
       );
@@ -90,7 +90,7 @@ module.exports = {
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
+          error.message || error,
           undefined
         )
       );
@@ -126,7 +126,7 @@ module.exports = {
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
+          error.message || error,
           undefined
         )
       );
@@ -144,9 +144,8 @@ module.exports = {
           HandleResponse(
             response.ERROR,
             StatusCodes.BAD_REQUEST,
-            message.VALIDATION_ERROR,
-            undefined,
-            error.details[0].message
+            error.details[0].message,
+            undefined
           )
         );
       }
@@ -173,9 +172,8 @@ module.exports = {
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
-          undefined,
-          error.message || error
+          error.message || error,
+          undefined
         )
       );
     }
@@ -212,7 +210,7 @@ module.exports = {
         HandleResponse(
           response.ERROR,
           StatusCodes.INTERNAL_SERVER_ERROR,
-          message.INTERNAL_SERVER_ERROR,
+          error.message || error,
           undefined
         )
       );
