@@ -22,4 +22,5 @@ module.exports = {
   DELETED: `deleted successfully.`,
   ADDED: `added successfully.`,
   IMAGE_REQUIRED: `Image is a required field.`,
+  METHOD_NOT_ALLOWED: `method not allowed.`,
 };
